@@ -1,0 +1,5 @@
+Powershell ISE teed käsud ja kontrollid seal koodi.
+copy paste git bash harjutused.
+copy paste notepad save all file ja arrays.ps1 (ps1 lõpuga)
+git bash et scripti kasutada tuleb kasutada käsku
+"powershell -ExecutionPolicy Bypass -File failinimi.ps1"
