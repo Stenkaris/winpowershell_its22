@@ -1,0 +1,10 @@
+$Array1 = @(1, 2, 3)
+$Array2 = @(4, 5, 6)
+$Array3 = @()
+for ($i = 0; $i -lt $Array1.Length; $i++) {
+    $Array3 += $Array1[$i] + $Array2[$i]
+}
+# Näitame Arrayd
+Write-Output "Array1: $Array1"
+Write-Output "Array2: $Array2"
+Write-Output "Array3: $Array3"
