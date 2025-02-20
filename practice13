@@ -1,0 +1,48 @@
+function peamenüü {
+    cls
+    Write-Host "`t`tPindala Kalkulaator" -ForegroundColor Green
+    Write-Host "`n`tPeamenüü" -ForegroundColor Yellow
+    Write-Host "`n1: Ruut" -ForegroundColor Green
+    Write-Host "2: Ristkülik" -ForegroundColor Green
+    Write-Host "3: Ring" -ForegroundColor Green
+    Write-Host "4: Kolmnurk" -ForegroundColor Green
+    Write-Host "5: Välju`n" -ForegroundColor Green
+    return Read-Host "Vali tegevus"
+}
+
+function arvuta-pindala {
+    param ($kujund)
+    cls
+    switch ($kujund) {
+        "1" {
+            Write-Host "`tRuut`n" -ForegroundColor Green
+            $külg = [int](Read-Host "Sisesta ruudu külje pikkus")
+            $pindala = $külg * $külg
+        }
+        "2" {
+            Write-Host "`tRistkülik`n" -ForegroundColor Green
+            $pikkus = [int](Read-Host "Sisesta ristküliku pikkus")
+            $laius = [int](Read-Host "Sisesta ristküliku laius")
+            $pindala = $pikkus * $laius
+        }
+        "3" {
+            Write-Host "`tRing`n" -ForegroundColor Green
+            $raadius = [int](Read-Host "Sisesta ringi raadius")
+            $pindala = [math]::PI * $raadius * $raadius
+        }
+        "4" {
+            Write-Host "`tKolmnurk`n" -ForegroundColor Green
+            $alus = [int](Read-Host "Sisesta kolmnurga alus")
+            $kõrgus = [int](Read-Host "Sisesta kolmnurga kõrgus")
+            $pindala = 0.5 * $alus * $kõrgus
+        }
+        default { return }
+    }
+    Write-Host "`nPindala: $pindala" -ForegroundColor Green
+    pause
+}
+
+do {
+    $valik = peamenüü
+    if ($valik -ne "5") { arvuta-pindala $valik }
+} while ($valik -ne "5")
