@@ -1,0 +1,32 @@
+  [int]$n1 = Read-Host "Kirjuta esimene nr"
+[int]$n2 = Read-Host "Kirjuta teine nr"
+
+Write-Host "Kalkulaator" -ForegroundColor Green
+Write-Host "1: Lisand" -ForegroundColor Yellow
+Write-Host "2: Lahutamine" -ForegroundColor Yellow
+Write-Host "3: Jagamine" -ForegroundColor Yellow
+Write-Host "4: Korrutamine" -ForegroundColor Yellow
+$ch = Read-Host "vali enda jaoks parim"
+switch($ch)
+{
+1
+{
+$s = $n1+$n2
+Write-Host "Sum is : "$s
+}
+2
+{
+$s = $n1-$n2
+Write-Host "Difference is : "$s
+}
+3
+{
+$s = $n1/$n2
+Write-Host "Quotient is : "$s
+}
+4
+{
+$s = $n1*$n2
+Write-Host "Product is : "$s
+}
+}
