@@ -1,0 +1,33 @@
+# Loome varukoopiate jaoks kausta, kui seda pole
+$backupKaust = "C:\Backup"
+if (!(Test-Path -Path $backupKaust)) {
+    New-Item -ItemType Directory -Path $backupKaust | Out-Null
+}
+
+# Leiame kõik lokaalsed kasutajad
+$kasutajad = Get-LocalUser | Where-Object { $_.Enabled -eq $true } | Select-Object -ExpandProperty Name
+
+# Tänane kuupäev formaadis PP.MM.YYYY
+$kuupaev = Get-Date -Format "dd.MM.yyyy"
+
+# Varundame iga kasutaja kodukataloogi
+foreach ($kasutaja in $kasutajad) {
+    # Kasutaja kodukataloogi määramine
+    $kodukaust = "C:\Users\$kasutaja"
+    $varundifail = "$backupKaust\$kasutaja-$kuupaev.zip"
+
+    # Kontrollime, kas kodukataloog eksisteerib
+    if (Test-Path -Path $kodukaust) {
+        try {
+            # Loome ZIP-faili
+            Compress-Archive -Path "$kodukaust\*" -DestinationPath $varundifail -Force
+            Write-Host "Varundamine õnnestus: $varundifail" -ForegroundColor Green
+        } catch {
+            Write-Host "Viga kasutaja $kasutaja kodukataloogi varundamisel: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Kasutajal $kasutaja puudub kodukataloog ($kodukaust), varundamine vahele jäetud." -ForegroundColor Yellow
+    }
+}
+
+Write-Host "Kõik varundamised lõpetatud!" -ForegroundColor Cyan
