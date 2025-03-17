@@ -1,0 +1,56 @@
+# Kasutaja andmete küsimine
+$eesnimi = Read-Host "Sisesta oma eesnimi: "
+$perenimi = Read-Host "Sisesta oma perenimi: "
+
+# Kasutajanime loomine
+$kasutajanimi = "$eesnimi.$perenimi".ToLower()
+Write-Host "Sinu kasutajanimi on: $kasutajanimi"
+
+# Kirjeldus
+$taisnimi = "$eesnimi $perenimi"
+$kirjeldus = "Lokaalne kasutaja loodud skriptiga :))"
+
+# Funktsioon tugeva parooli genereerimiseks
+Function Genereeri-Parool {
+    param([int]$pikkus = 14)
+
+    # Erinevad märgikategooriad
+    $suurtahed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray() | Get-Random -Count 2
+    $vahiketahhed = "abcdefghijklmnopqrstuvwxyz".ToCharArray() | Get-Random -Count 2
+    $numbrid = "0123456789".ToCharArray() | Get-Random -Count 2
+    $sümbolid = "!@#$%^&*()-_=+".ToCharArray() | Get-Random -Count 2
+
+    # Ülejäänud tähemärgid valitakse juhuslikult
+    $tähemärgid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+".ToCharArray()
+    $ulejaanud = $tähemärgid | Get-Random -Count ($pikkus - 8)
+
+    # Kombineerime kõik tähemärgid ja segame
+    $parool = ($suurtahed + $vahiketahhed + $numbrid + $sümbolid + $ulejaanud) | Sort-Object {Get-Random}
+    
+    return -join $parool
+}
+
+# Genereeri tugeva parooliga
+$parool = Genereeri-Parool
+
+# Kontroll, kas kasutaja on juba olemas
+if (Get-LocalUser -Name $kasutajanimi -ErrorAction SilentlyContinue) {
+    Write-Host "Kasutaja nimega $kasutajanimi on juba olemas!" -ForegroundColor Yellow
+} else {
+    try {
+        # Kasutaja loomine tugeva parooliga
+        New-LocalUser -Name $kasutajanimi -Password (ConvertTo-SecureString $parool -AsPlainText -Force) -FullName $taisnimi -Description $kirjeldus -ErrorAction Stop
+        Write-Host "Kasutaja $kasutajanimi on edukalt loodud!" -ForegroundColor Cyan
+
+        # Salvestame andmed CSV-faili
+        $kasutajaInfo = [PSCustomObject]@{
+            Kasutajanimi = $kasutajanimi
+            Parool       = $parool
+        }
+        $failitee = "kasutajanimi.csv"
+        $kasutajaInfo | Export-Csv -Path $failitee -Append -NoTypeInformation
+        Write-Host "Kasutaja andmed salvestatud faili $failitee" -ForegroundColor Green
+    } catch {
+        Write-Host "Tekkis probleem kasutaja loomisega: $_" -ForegroundColor DarkRed
+    }
+}
