@@ -1,56 +1,40 @@
-# Kasutaja andmete küsimine
-$eesnimi = Read-Host "Sisesta oma eesnimi: "
-$perenimi = Read-Host "Sisesta oma perenimi: "
+# Määrame failide asukohad
+$csvPath = "C:\Users\Administrator\adkasutajad.csv"
+$outputCsv = "C:\Users\Administrator\kasutajad.csv"
 
-# Kasutajanime loomine
-$kasutajanimi = "$eesnimi.$perenimi".ToLower()
-Write-Host "Sinu kasutajanimi on: $kasutajanimi"
-
-# Kirjeldus
-$taisnimi = "$eesnimi $perenimi"
-$kirjeldus = "Lokaalne kasutaja loodud skriptiga :))"
-
-# Funktsioon tugeva parooli genereerimiseks
-Function Genereeri-Parool {
-    param([int]$pikkus = 14)
-
-    # Erinevad märgikategooriad
-    $suurtahed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray() | Get-Random -Count 2
-    $vahiketahhed = "abcdefghijklmnopqrstuvwxyz".ToCharArray() | Get-Random -Count 2
-    $numbrid = "0123456789".ToCharArray() | Get-Random -Count 2
-    $sümbolid = "!@#$%^&*()-_=+".ToCharArray() | Get-Random -Count 2
-
-    # Ülejäänud tähemärgid valitakse juhuslikult
-    $tähemärgid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+".ToCharArray()
-    $ulejaanud = $tähemärgid | Get-Random -Count ($pikkus - 8)
-
-    # Kombineerime kõik tähemärgid ja segame
-    $parool = ($suurtahed + $vahiketahhed + $numbrid + $sümbolid + $ulejaanud) | Sort-Object {Get-Random}
-    
-    return -join $parool
+# Kontrollime, kas sisendfail eksisteerib, kui mitte, siis loome selle
+if (-Not (Test-Path $csvPath)) {
+    Write-Host "Sisendfaili ei leitud. Loon uue näidisfaili..." -ForegroundColor Yellow
+    @"
+FirstName,LastName,Department,Role,SamAccountName
+John,Doe,IT,Admin,jdoe
+Jane,Smith,HR,Manager,jsmith
+"@ | Out-File -FilePath $csvPath -Encoding utf8
 }
 
-# Genereeri tugeva parooliga
-$parool = Genereeri-Parool
+# Loeme kasutajad failist
+$users = Import-Csv -Path $csvPath
 
-# Kontroll, kas kasutaja on juba olemas
-if (Get-LocalUser -Name $kasutajanimi -ErrorAction SilentlyContinue) {
-    Write-Host "Kasutaja nimega $kasutajanimi on juba olemas!" -ForegroundColor Yellow
-} else {
-    try {
-        # Kasutaja loomine tugeva parooliga
-        New-LocalUser -Name $kasutajanimi -Password (ConvertTo-SecureString $parool -AsPlainText -Force) -FullName $taisnimi -Description $kirjeldus -ErrorAction Stop
-        Write-Host "Kasutaja $kasutajanimi on edukalt loodud!" -ForegroundColor Cyan
-
-        # Salvestame andmed CSV-faili
-        $kasutajaInfo = [PSCustomObject]@{
-            Kasutajanimi = $kasutajanimi
-            Parool       = $parool
-        }
-        $failitee = "kasutajanimi.csv"
-        $kasutajaInfo | Export-Csv -Path $failitee -Append -NoTypeInformation
-        Write-Host "Kasutaja andmed salvestatud faili $failitee" -ForegroundColor Green
-    } catch {
-        Write-Host "Tekkis probleem kasutaja loomisega: $_" -ForegroundColor DarkRed
-    }
+# Kontrollime, kas väljundfail on olemas, kui mitte, siis loome selle koos päisega
+if (-Not (Test-Path $outputCsv)) {
+    "Kasutajanimi,Parool" | Out-File -FilePath $outputCsv -Encoding utf8
 }
+
+# Loome kasutajad ja genereerime neile paroolid
+foreach ($user in $users) {
+    # Genereerime turvalise parooli (12 tähemärki, tähed, numbrid ja sümbolid)
+    $password = -join ((1..12) | ForEach-Object { "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*"[(Get-Random -Maximum 62)] })
+
+    # Loome AD kasutaja
+    New-ADUser -GivenName $user.FirstName -Surname $user.LastName `
+        -SamAccountName $user.SamAccountName `
+        -UserPrincipalName "$($user.SamAccountName)@sv-kool.local" `
+        -Department $user.Department -Title $user.Role `
+        -AccountPassword (ConvertTo-SecureString $password -AsPlainText -Force) `
+        -Enabled $true
+
+    # Salvestame tulemuse CSV-faili
+    "$($user.SamAccountName),$password" | Out-File -FilePath $outputCsv -Append -Encoding utf8
+}
+
+Write-Host "✅ Kasutajad loodud ja salvestatud faili $outputCsv" -ForegroundColor Green
