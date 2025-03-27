@@ -1,18 +1,35 @@
-# Kasutaja ees- ja perenimi
-$eesnimi = Read-Host "Sisesta eesnimi"
-$perenimi = Read-Host "Sisesta perenimi"
 
-# Loome kasutajanime
-$username = "$($eesnimi.ToLower()).$($perenimi.ToLower())"
-
-# Kontrollime, kas kasutaja eksisteerib
-try {
-    # Kustutame kasutaja AD-st
-    Remove-ADUser -Identity $username -Confirm:$false -ErrorAction Stop
-
-    Write-Host "Kasutaja $username on edukalt kustutatud." -ForegroundColor Cyan
-} catch {
-    # Kui kustutamine ebaõnnestub, kuvatakse veateade
-    Write-Host "Kasutaja $username kustutamine ebaõnnestus: $_" -ForegroundColor Red
+# Kontrollime, kas Active Directory moodul on saadaval
+if (!(Get-Module -ListAvailable -Name ActiveDirectory)) {
+    Write-Host "ActiveDirectory moodul puudub. Kontrolli AD DS rolli paigaldust!" -ForegroundColor Red
+    exit
 }
 
+# Laadime Active Directory mooduli
+Import-Module ActiveDirectory
+
+# Määrame CSV-faili asukoha
+$csvPath = "C:\Users\Administrator\adkasutajad.csv"
+
+# Kui CSV-fail eksisteerib, kustutame kasutajad sellest failist
+if (Test-Path $csvPath) {
+    $users = Import-Csv -Path $csvPath
+    foreach ($user in $users) {
+        $samAccountName = $user.SamAccountName
+        if (Get-ADUser -Filter {SamAccountName -eq $samAccountName}) {
+            Remove-ADUser -Identity $samAccountName -Confirm:$false
+            Write-Host "Kasutaja $samAccountName on kustutatud." -ForegroundColor Green
+        } else {
+            Write-Host "Kasutajat $samAccountName ei leitud." -ForegroundColor Yellow
+        }
+    }
+} else {
+    # Kui CSV-faili ei ole, küsime käsitsi kasutaja nime
+    $userToDelete = Read-Host "Sisesta kasutaja SamAccountName, keda kustutada"
+    if (Get-ADUser -Filter {SamAccountName -eq $userToDelete}) {
+        Remove-ADUser -Identity $userToDelete -Confirm:$false
+        Write-Host "Kasutaja $userToDelete on kustutatud." -ForegroundColor Green
+    } else {
+        Write-Host "Kasutajat $userToDelete ei leitud." -ForegroundColor Yellow
+    }
+}
