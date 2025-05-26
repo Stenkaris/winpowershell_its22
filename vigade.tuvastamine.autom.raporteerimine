@@ -1,0 +1,15 @@
+#!/bin/bash
+# Autor: Sten Karis
+# Kirjeldus: Saadab e-kirja, kui ketas on üle 70% täis
+
+THRESHOLD=70
+EMAIL="sinu@meil.ee"
+SUBJECT="DRAIV TÄISHOIATUS"
+
+while read line; do
+    USAGE=$(echo $line | awk '{print $5}' | tr -d '%')
+    PARTITION=$(echo $line | awk '{print $1}')
+    if [ "$USAGE" -ge "$THRESHOLD" ]; then
+        echo "$PARTITION on $USAGE% täis" | mail -s "$SUBJECT" "$EMAIL"
+    fi
+done <<< "$(df -h | grep '^/dev/')"
