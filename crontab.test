@@ -1,0 +1,2 @@
+crontab -e
+0 * * * * /home/user/testskript.sh >> /var/log/testskript.log 2>&1
