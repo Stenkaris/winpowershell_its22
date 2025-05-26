@@ -1,0 +1,26 @@
+#!/bin/bash
+# Autor: Sten Karis
+# Kirjeldus: Kontrollib 3 testi: failide olemasolu, teenuse tööd ja failiõigusi
+
+# Test 1: Faili olemasolu
+if [ -f /var/www/html/index.html ]; then
+    echo "index.html olemas."
+else
+    echo "index.html puudub!"
+fi
+
+# Test 2: Apache2 teenus töötab
+if systemctl is-active --quiet apache2.service; then
+    echo "Apache2 teenus töötab."
+else
+    echo "Apache2 teenus EI tööta!"
+fi
+
+# Test 3: Faili omanikud kataloogis
+invalid_files=$(find /var/www/html/ ! -user root ! -user www-data)
+if [ -z "$invalid_files" ]; then
+    echo "Kõik failid /var/www/html kataloogis on õigete omanikega."
+else
+    echo "Leiti failid vale omanikuga:"
+    echo "$invalid_files"
+fi
