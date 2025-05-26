@@ -1,0 +1,16 @@
+# Autor: Sten Karis
+# Kirjeldus: Kogub süsteemi infot ja salvestab logifaili
+
+$logFile = "C:\Logs\system_health.log"
+$date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$cpu = (Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples.CookedValue
+$disk = Get-PSDrive C | Select-Object Used,Free
+$mem = Get-WmiObject Win32_OperatingSystem
+
+Add-Content $logFile "$date"
+Add-Content $logFile "CPU koormus: $([math]::Round($cpu,2)) %"
+Add-Content $logFile "Mälu kasutus: $([math]::Round(($mem.TotalVisibleMemorySize - $mem.FreePhysicalMemory)/1024,2)) MB"
+Add-Content $logFile "Kettaruum vaba: $([math]::Round($disk.Free/1GB,2)) GB"
+Add-Content $logFile "--------------------------"
+
+#"tuleb luua ka kaust C:/logs/"
