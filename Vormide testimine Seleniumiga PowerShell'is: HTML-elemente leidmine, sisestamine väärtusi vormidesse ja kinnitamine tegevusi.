@@ -1,0 +1,59 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+
+# Kui kasutad Chrome'i, veendu, et sul on õige chromedriver ja selenium paigaldatud:
+# pip install selenium
+
+# Käivita brauser
+driver = webdriver.Chrome()
+
+try:
+    # Ava leht
+    driver.get("https://www.w3schools.com/html/html_forms.asp")  # Pane siia oma URL
+
+    time.sleep(3)  # Oota, et leht korralikult laeks (vajadusel pikenda)
+
+    # Näide: Leia tekstiväljad ja täida need, kui vaja
+    # Kui sul on oma väljad, muuda selektorid vastavalt
+    firstname_input = driver.find_element(By.NAME, "firstname")
+    lastname_input = driver.find_element(By.NAME, "lastname")
+
+    firstname_input.clear()
+    firstname_input.send_keys("Sten")
+
+    lastname_input.clear()
+    lastname_input.send_keys("Karis")
+
+    time.sleep(1)  # Oota veidi enne nupu vajutamist
+
+    # Leia nupp (submit)
+    submit_btn = driver.find_element(By.CSS_SELECTOR, "form[action='/action_page.php'] input[type='submit']")
+
+    # Peida nav-baar või muu element, mis võib nuppu katta
+    driver.execute_script("""
+        const nav = document.querySelector('.w3-bar');
+        if(nav) { nav.style.display = 'none'; }
+    """)
+
+    time.sleep(1)  # Oota, et muudatus jõustuks
+
+    # Scroll nupu keskele, et oleks nähtav
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", submit_btn)
+
+    time.sleep(1)
+
+    # Vajuta nuppu JavaScripti abil
+    driver.execute_script("arguments[0].click();", submit_btn)
+
+    print("Nupp klõpsatud, brauser jätkab tööd ja ei sulgu.")
+
+    # SIIN võid lisada muud koodi, mis soovid pärast nupu vajutamist teha.
+    # Kui tahad, jäta brauser avatuks, kui mitte, siis lisa driver.quit()
+
+    time.sleep(10)  # Hoia brauser lahti 10 sekundit (võid muuta või eemaldada)
+
+finally:
+    # Kui tahad, siis sulge brauser lõpuks
+    # driver.quit()
+    pass
